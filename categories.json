@@ -1,0 +1,17 @@
+[
+    {
+        "id": "01",
+        "name": "Nissan",
+        "img": "https://i.ibb.co/6WJdvtW/nissan.png"
+    },
+    {
+        "id": "02",
+        "name": "Toyota",
+        "img": "https://i.ibb.co/ggPmcHw/toyota.png"
+    },
+    {
+        "id": "03",
+        "name": "Volkswagen",
+        "img": "https://i.ibb.co/k8FGTyX/volkswagen.png"
+    }
+]
