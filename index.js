@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
-const categories = require("./categories.json")
+// const categories = require("./categories.json")
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ltefwui.mongodb.net/?retryWrites=true&w=majority`;
@@ -16,9 +16,12 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 const run = async () => {
     try {
+        const categoriesCollection = client.db('recycleHub').collection("categories")
         const carsCollection = client.db('recycleHub').collection("cars")
 
-        app.get("/categories", (req, res) => {
+        app.get("/categories", async (req, res) => {
+            const query = {};
+            const categories = await categoriesCollection.find(query).toArray()
             res.send(categories)
         })
 
@@ -30,7 +33,7 @@ const run = async () => {
         app.get("/latestCars", async (req, res) => {
             const query = {};
             const cursor = carsCollection.find(query).sort({ _id: -1 })
-            const cars = await cursor.limit(4).toArray()
+            const cars = await cursor.limit(3).toArray()
             res.send(cars)
         })
 
