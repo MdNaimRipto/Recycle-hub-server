@@ -1,3 +1,4 @@
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const express = require('express')
 const cors = require("cors")
 const app = express()
@@ -9,9 +10,37 @@ app.use(express.json())
 
 const categories = require("./categories.json")
 
-app.get("/categories", (req, res) => {
-    res.send(categories)
-})
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ltefwui.mongodb.net/?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+const run = async () => {
+    try {
+        const carsCollection = client.db('recycleHub').collection("cars")
+
+        app.get("/categories", (req, res) => {
+            res.send(categories)
+        })
+
+        app.get("/allCars", async (req, res) => {
+            const query = {};
+            const cars = await carsCollection.find(query).sort({ _id: -1 }).toArray()
+            res.send(cars)
+        })
+
+        app.get("/categoryItem/:category_id", async (req, res) => {
+            const category_id = req.params.category_id;
+            const query = { category_id: category_id }
+            const cars = await (await carsCollection.find(query).toArray())
+            res.send(cars)
+        })
+    }
+    finally {
+
+    }
+}
+run().catch(err => console.error(err))
+
 
 app.get("/", (req, res) => {
     res.send("Recycle Hub Server is Running")
