@@ -24,14 +24,20 @@ const run = async () => {
 
         app.get("/allCars", async (req, res) => {
             const query = {};
-            const cars = await carsCollection.find(query).sort({ _id: -1 }).toArray()
+            const cars = await carsCollection.find(query).toArray()
+            res.send(cars)
+        })
+        app.get("/latestCars", async (req, res) => {
+            const query = {};
+            const cursor = carsCollection.find(query).sort({ _id: -1 })
+            const cars = await cursor.limit(4).toArray()
             res.send(cars)
         })
 
         app.get("/categoryItem/:category_id", async (req, res) => {
             const category_id = req.params.category_id;
             const query = { category_id: category_id }
-            const cars = await (await carsCollection.find(query).toArray())
+            const cars = await carsCollection.find(query).toArray()
             res.send(cars)
         })
     }
