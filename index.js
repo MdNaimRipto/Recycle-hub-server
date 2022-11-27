@@ -100,6 +100,11 @@ const run = async () => {
             const cars = await carsCollection.find(query).toArray()
             res.send(cars)
         })
+        app.post("/allCars", async (req, res) => {
+            const car = req.body;
+            const result = await carsCollection.insertOne(car)
+            res.send(result)
+        })
         app.get("/latestCars", async (req, res) => {
             const query = {};
             const cursor = carsCollection.find(query).sort({ _id: -1 })
@@ -112,12 +117,6 @@ const run = async () => {
             const query = { _id: ObjectId(id) }
             const cars = await carsCollection.findOne(query)
             res.send(cars)
-        })
-
-        app.get("/categoriesId", async (req, res) => {
-            const query = {};
-            const result = await categoriesCollection.find(query).project({ id: 1 }).toArray()
-            res.send(result)
         })
 
         // Cars by category_id:
