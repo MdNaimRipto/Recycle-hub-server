@@ -35,25 +35,38 @@ const run = async () => {
         const categoriesCollection = client.db('recycleHub').collection("categories")
         const carsCollection = client.db('recycleHub').collection("cars")
         const usersCollection = client.db('recycleHub').collection("users");
+        const ordersCollection = client.db('recycleHub').collection("orders");
 
 
         // Admin verify:
-        const verifyAdmin = async (req, res, next) => {
-            const decodedEmail = req.decoded.email
-            const query = { email: decodedEmail }
-            const user = await usersCollection.findOne(query)
-            if (user?.role !== "admin") {
-                return res.status(403).send({ message: "Forbidden access" })
-            }
-            next()
-        }
+        // const verifyAdmin = async (req, res, next) => {
+        //     const decodedEmail = req.decoded.email
+        //     const query = { email: decodedEmail }
+        //     const user = await usersCollection.findOne(query)
+        //     if (user?.role !== "admin") {
+        //         return res.status(403).send({ message: "Forbidden access" })
+        //     }
+        //     next()
+        // }
 
         // Seller verify:
         const verifySeller = async (req, res, next) => {
             const decodedEmail = req.decoded.email
             const query = { email: decodedEmail }
             const user = await usersCollection.findOne(query)
-            if (user?.role !== "seller") {
+            if (user?.user?.role !== "seller") {
+                return res.status(403).send({ message: "Forbidden access" })
+            }
+            next()
+        }
+
+        // // Verify Buyer:
+
+        const verifyBuyer = async (req, res, next) => {
+            const decodedEmail = req.decoded.email
+            const query = { email: decodedEmail }
+            const user = await usersCollection.findOne(query)
+            if (user?.user?.role !== "buyer") {
                 return res.status(403).send({ message: "Forbidden access" })
             }
             next()
@@ -101,6 +114,12 @@ const run = async () => {
             res.send(cars)
         })
 
+        app.get("/categoriesId", async (req, res) => {
+            const query = {};
+            const result = await categoriesCollection.find(query).project({ id: 1 }).toArray()
+            res.send(result)
+        })
+
         // Cars by category_id:
 
         app.get("/categoryItem/:category_id", async (req, res) => {
@@ -115,7 +134,6 @@ const run = async () => {
         app.put("/users", async (req, res) => {
             const user = req.body.user;
             const filter = { email: user?.email }
-            console.log(filter)
             const options = { upsert: true }
             const updateDoc = {
                 $set: {
@@ -125,6 +143,64 @@ const run = async () => {
             const result = await usersCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
+
+        // Orders Section(Buyer):
+
+        app.get("/orders", verifyJwt, verifyBuyer, async (req, res) => {
+            const decodedEmail = req.decoded.email
+            const email = req.query.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: "Unauthorized access" })
+            }
+            const query = { email: email };
+            const result = await ordersCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        app.post("/orders", async (req, res) => {
+            const order = req.body
+            const result = await ordersCollection.insertOne(order)
+            res.send(result)
+        })
+
+
+        // Buyer Section:
+
+        app.get("/users/buyer/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query)
+            res.send({ isBuyer: user?.user?.role === "buyer" })
+        })
+
+        // Seller Section :
+
+        app.get("/users/seller/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query)
+            res.send({ isSeller: user?.user?.role === "seller" })
+        })
+
+
+
+
+
+        // Temporary Update function:
+
+        //     app.get("/verifySeller", async (req, res) => {
+        //         const filter = {};
+        //         const options = { upsert: true };
+        //         const updatedDoc = {
+        //             $set: {
+        //                 verified: true
+        //             }
+        //         }
+        //         const result = await carsCollection.updateMany(filter, updatedDoc, options);
+        //         res.send(result)
+        //     })
+
+
     }
     finally {
 
