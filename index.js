@@ -39,15 +39,15 @@ const run = async () => {
 
 
         // Admin verify:
-        // const verifyAdmin = async (req, res, next) => {
-        //     const decodedEmail = req.decoded.email
-        //     const query = { email: decodedEmail }
-        //     const user = await usersCollection.findOne(query)
-        //     if (user?.role !== "admin") {
-        //         return res.status(403).send({ message: "Forbidden access" })
-        //     }
-        //     next()
-        // }
+        const verifyAdmin = async (req, res, next) => {
+            const decodedEmail = req.decoded.email
+            const query = { email: decodedEmail }
+            const user = await usersCollection.findOne(query)
+            if (user?.user?.role !== "admin") {
+                return res.status(403).send({ message: "Forbidden access" })
+            }
+            next()
+        }
 
         // Seller verify:
         const verifySeller = async (req, res, next) => {
@@ -164,6 +164,15 @@ const run = async () => {
         })
 
 
+        // Admin Section:
+
+        app.get("/users/admin/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query)
+            res.send({ isAdmin: user?.user?.role === "admin" })
+        })
+
         // Buyer Section:
 
         app.get("/users/buyer/:email", async (req, res) => {
@@ -188,17 +197,17 @@ const run = async () => {
 
         // Temporary Update function:
 
-        //     app.get("/verifySeller", async (req, res) => {
-        //         const filter = {};
-        //         const options = { upsert: true };
-        //         const updatedDoc = {
-        //             $set: {
-        //                 verified: true
-        //             }
+        // app.get("/payment", async (req, res) => {
+        //     const filter = {};
+        //     const options = { upsert: true };
+        //     const updatedDoc = {
+        //         $set: {
+        //             paid: false
         //         }
-        //         const result = await carsCollection.updateMany(filter, updatedDoc, options);
-        //         res.send(result)
-        //     })
+        //     }
+        //     const result = await carsCollection.updateMany(filter, updatedDoc, options);
+        //     res.send(result)
+        // })
 
 
     }
