@@ -100,6 +100,19 @@ const run = async () => {
             const cars = await carsCollection.find(query).toArray()
             res.send(cars)
         })
+
+        app.get("/myProducts", verifyJwt, verifySeller, async (req, res) => {
+            const seller = req.query.seller;
+            const query = { seller: seller };
+            const myProducts = await carsCollection.find(query).toArray()
+            res.send(myProducts)
+        })
+
+        app.get("/allSellers", async (req, res) => {
+            const query = {}
+            const result = await carsCollection.find(query).project({ seller: 1 }).toArray()
+            res.send(result)
+        })
         app.post("/allCars", async (req, res) => {
             const car = req.body;
             const result = await carsCollection.insertOne(car)
