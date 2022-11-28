@@ -108,14 +108,16 @@ const run = async () => {
             res.send(myProducts)
         })
 
-        app.get("/allSellers", async (req, res) => {
-            const query = {}
-            const result = await carsCollection.find(query).project({ seller: 1 }).toArray()
-            res.send(result)
-        })
         app.post("/allCars", async (req, res) => {
             const car = req.body;
             const result = await carsCollection.insertOne(car)
+            res.send(result)
+        })
+
+        app.delete("/allCars/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await carsCollection.deleteOne(query);
             res.send(result)
         })
         app.get("/latestCars", async (req, res) => {
