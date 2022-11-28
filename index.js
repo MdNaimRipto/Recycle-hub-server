@@ -36,6 +36,7 @@ const run = async () => {
         const carsCollection = client.db('recycleHub').collection("cars")
         const usersCollection = client.db('recycleHub').collection("users");
         const ordersCollection = client.db('recycleHub').collection("orders");
+        const advertiseCollection = client.db('recycleHub').collection("advertise");
 
 
         // Admin verify:
@@ -101,16 +102,22 @@ const run = async () => {
             res.send(cars)
         })
 
-        app.get("/myProducts", verifyJwt, verifySeller, async (req, res) => {
-            const seller = req.query.seller;
-            const query = { seller: seller };
-            const myProducts = await carsCollection.find(query).toArray()
-            res.send(myProducts)
-        })
-
         app.post("/allCars", async (req, res) => {
             const car = req.body;
             const result = await carsCollection.insertOne(car)
+            res.send(result)
+        })
+
+        app.patch("/allCars/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const advertised = req.body.advertised;
+            const updatedStatus = {
+                $set: {
+                    advertised: advertised
+                }
+            }
+            const result = await carsCollection.updateOne(filter, updatedStatus)
             res.send(result)
         })
 
@@ -143,18 +150,20 @@ const run = async () => {
             res.send(cars)
         })
 
-        // Users Section:
+        // My Products section(Seller):
 
-        app.put("/users", async (req, res) => {
-            const user = req.body.user;
-            const filter = { email: user?.email }
-            const options = { upsert: true }
-            const updateDoc = {
-                $set: {
-                    user: user
-                }
-            }
-            const result = await usersCollection.updateOne(filter, updateDoc, options)
+        app.get("/myProducts", verifyJwt, verifySeller, async (req, res) => {
+            const seller = req.query.seller;
+            const query = { seller: seller };
+            const myProducts = await carsCollection.find(query).toArray()
+            res.send(myProducts)
+        })
+
+        // Advertise Section(Seller):
+
+        app.post("/advertisements", async (req, res) => {
+            const advertise = req.body;
+            const result = await advertiseCollection.insertOne(advertise);
             res.send(result)
         })
 
@@ -177,6 +186,21 @@ const run = async () => {
             res.send(result)
         })
 
+
+        // Users Section:
+
+        app.put("/users", async (req, res) => {
+            const user = req.body.user;
+            const filter = { email: user?.email }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    user: user
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
 
         // Admin Section:
 
@@ -211,12 +235,12 @@ const run = async () => {
 
         // Temporary Update function:
 
-        // app.get("/payment", async (req, res) => {
+        // app.get("/advertise", async (req, res) => {
         //     const filter = {};
         //     const options = { upsert: true };
         //     const updatedDoc = {
         //         $set: {
-        //             paid: false
+        //             advertised: false
         //         }
         //     }
         //     const result = await carsCollection.updateMany(filter, updatedDoc, options);
