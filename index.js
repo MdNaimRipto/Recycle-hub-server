@@ -127,12 +127,6 @@ const run = async () => {
             const result = await carsCollection.deleteOne(query);
             res.send(result)
         })
-        app.get("/latestCars", async (req, res) => {
-            const query = {};
-            const cursor = carsCollection.find(query).sort({ _id: -1 })
-            const cars = await cursor.limit(3).toArray()
-            res.send(cars)
-        })
 
         app.get("/carDetails/:id", async (req, res) => {
             const id = req.params.id;
@@ -160,6 +154,13 @@ const run = async () => {
         })
 
         // Advertise Section(Seller):
+
+        app.get("/advertisements", async (req, res) => {
+            const query = {};
+            const advertisements = advertiseCollection.find(query).sort({ _id: -1 })
+            const result = await advertisements.limit(3).toArray()
+            res.send(result)
+        })
 
         app.post("/advertisements", async (req, res) => {
             const advertise = req.body;
@@ -189,6 +190,12 @@ const run = async () => {
 
         // Users Section:
 
+        app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
+            const query = {}
+            const user = await usersCollection.find(query).toArray()
+            res.send(user)
+        })
+
         app.put("/users", async (req, res) => {
             const user = req.body.user;
             const filter = { email: user?.email }
@@ -199,6 +206,28 @@ const run = async () => {
                 }
             }
             const result = await usersCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
+
+        app.put("/users/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
+            const verified = req.body.verified;
+            const updatedDoc = {
+                $set: {
+                    verified: verified
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options)
+            res.send(result)
+            // console.log(verified)
+        })
+
+        app.delete("/users/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await usersCollection.deleteOne(query)
             res.send(result)
         })
 
