@@ -4,6 +4,7 @@ const cors = require("cors")
 const app = express()
 require("dotenv").config()
 const jwt = require("jsonwebtoken")
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 const port = process.env.PORT || 5000
 
@@ -37,6 +38,7 @@ const run = async () => {
         const usersCollection = client.db('recycleHub').collection("users");
         const ordersCollection = client.db('recycleHub').collection("orders");
         const advertiseCollection = client.db('recycleHub').collection("advertise");
+        const paymentsCollection = client.db('recycleHub').collection("payments");
 
 
         // Admin verify:
@@ -155,7 +157,7 @@ const run = async () => {
 
         // Advertise Section(Seller):
 
-        app.get("/advertisements", async (req, res) => {
+        app.get("/advertisements", verifyJwt, async (req, res) => {
             const query = {};
             const advertisements = advertiseCollection.find(query).sort({ _id: -1 })
             const result = await advertisements.limit(3).toArray()
@@ -229,6 +231,40 @@ const run = async () => {
             const query = { _id: ObjectId(id) }
             const result = await usersCollection.deleteOne(query)
             res.send(result)
+        })
+
+        // Payment Section:
+
+        app.post("/payments", async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment)
+            const id = payment.bookingId;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+
+                }
+            }
+            const updatedResult = await carsCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+        })
+
+        app.post("/create-payment-intent", async (req, res) => {
+            const paymentInfo = req.body
+            const price = parseInt(paymentInfo.price)
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: "usd",
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ]
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
         })
 
         // Admin Section:
