@@ -157,7 +157,7 @@ const run = async () => {
 
         // Advertise Section(Seller):
 
-        app.get("/advertisements", verifyJwt, async (req, res) => {
+        app.get("/advertisements", async (req, res) => {
             const query = {};
             const advertisements = advertiseCollection.find(query).sort({ _id: -1 })
             const result = await advertisements.limit(3).toArray()
